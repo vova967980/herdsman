@@ -1,0 +1,35 @@
+{
+  "overrides": [
+    {
+      "files": [".prettierrc", ".babelrc", ".eslintrc.json", ".stylelintrc"],
+      "options": {
+        "parser": "json"
+      }
+    },
+    {
+      "files": ["*.js", "*.jsx", "*.es6", "*.ts", "*.tsx"],
+      "options": {
+        "parser": "babel-ts"
+      }
+    },
+    {
+      "files": ["*.css"],
+      "options": {
+        "parser": "css"
+      }
+    },
+    {
+      "files": ["*.scss"],
+      "options": {
+        "parser": "scss"
+      }
+    }
+  ],
+  "singleQuote": true,
+  "trailingComma": "none",
+  "bracketSpacing": true,
+  "tabWidth": 2,
+  "printWidth": 120,
+  "semi": true,
+  "arrowParens": "avoid"
+}
