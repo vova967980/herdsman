@@ -1,22 +1,23 @@
 import * as PIXI from 'pixi.js';
 import {
-  ANIMAL_COUNT, ANIMAL_FOLLOW_DISTANCE,
+  ANIMAL_COUNT, ANIMAL_FOLLOW_DISTANCE, ANIMAL_RADIUS,
   GAME_BACKGROUND_COLOR,
   GAME_HEIGHT,
-  GAME_WIDTH, MAX_GROUP_SIZE,
-  PIXI_CONTAINER_ID, YARD_HEIGHT, YARD_MARGIN, YARD_WIDTH
+  GAME_WIDTH, HERO_RADIUS, HERO_SPEED, MAX_ANIMALS_ON_FIELD, MAX_GROUP_SIZE,
+  PIXI_CONTAINER_ID, YARD_MARGIN
 } from '../contstants';
 import { Animal, Hero, Yard } from './entities';
 import { Score } from './ui';
-import { isInsideYard } from '../utils';
+import { SpawnGenerator } from './core/SpawnGenerator.ts';
 
 export class Game {
-  private app: PIXI.Application;
+  private readonly app: PIXI.Application;
   private hero: Hero | null = null;
   private animals: Animal[] = [];
   private yard: Yard | null = null;
   private score: Score | null = null;
   private group: Animal[] = [];
+  private spawner: SpawnGenerator<Animal> | null = null;
 
   constructor() {
     this.app = new PIXI.Application();
@@ -31,10 +32,11 @@ export class Game {
 
     document.getElementById(PIXI_CONTAINER_ID)?.appendChild(this.app.canvas);
 
-    this.createHero();
     this.createYard();
-    this.createAnimals();
+    this.createHero();
     this.createScore();
+    this.setupSpawner();
+    this.createAnimals();
     this.setupTicker();
     this.setupInput();
   }
@@ -49,30 +51,10 @@ export class Game {
   }
 
   private createAnimals() {
-    const yardRect = {
-      x: GAME_WIDTH - YARD_WIDTH - YARD_MARGIN,
-      y: GAME_HEIGHT - YARD_HEIGHT - YARD_MARGIN,
-      width: YARD_WIDTH,
-      height: YARD_HEIGHT
-    };
+    if (!this.spawner || !this.yard) return;
 
     for (let i = 0; i < ANIMAL_COUNT; i++) {
-      let x, y;
-
-      const buffer = YARD_MARGIN;
-
-      do {
-        x = Math.random() * this.app.screen.width;
-        y = Math.random() * this.app.screen.height;
-      } while (isInsideYard(x, y, {
-        x: yardRect.x - buffer,
-        y: yardRect.y - buffer,
-        width: yardRect.width + buffer * 2,
-        height: yardRect.height + buffer * 2
-      }));
-
-      const animal = new Animal(x, y);
-      animal.addToStage(this.app.stage);
+      const animal = this.spawner.spawnEntity();
       this.animals.push(animal);
     }
   }
@@ -87,6 +69,30 @@ export class Game {
     const score = new Score();
     score.addToStage(this.app.stage);
     this.score = score;
+  }
+
+  private setupSpawner() {
+    if (!this.yard) return;
+
+    const yardRect = {
+      x: this.yard.sprite.x,
+      y: this.yard.sprite.y,
+      width: this.yard.sprite.width,
+      height: this.yard.sprite.height
+    };
+
+    this.spawner = new SpawnGenerator<Animal>({
+      app: this.app,
+      restrictedRect: yardRect,
+      restrictedRectBuffer: YARD_MARGIN,
+      maxEntities: MAX_ANIMALS_ON_FIELD,
+      getActiveCount: () => this.animals.length,
+      createEntity: (x, y) => new Animal(x, y, yardRect, YARD_MARGIN),
+      onSpawn: (animal) => {
+        this.animals.push(animal);
+      }
+    });
+    this.spawner.start();
   }
 
   private setupInput() {
@@ -107,14 +113,37 @@ export class Game {
 
   private update(ticker: PIXI.Ticker) {
     const { deltaTime } = ticker;
-
-    if (!this.hero) return;
+    if (!this.hero || !this.yard) return;
 
     this.hero.update(deltaTime);
 
+    const yardRect = {
+      x: this.yard.sprite.x,
+      y: this.yard.sprite.y,
+      width: this.yard.sprite.width,
+      height: this.yard.sprite.height
+    };
+
     for (const animal of this.animals) {
+      animal.update(deltaTime, HERO_SPEED);
+
       if (this.group.includes(animal)) {
-        animal.update(deltaTime);
+
+        const { x, y } = animal.position;
+        const inYard =
+          x >= yardRect.x &&
+          x <= yardRect.x + yardRect.width &&
+          y >= yardRect.y &&
+          y <= yardRect.y + yardRect.height;
+
+        if (inYard) {
+          animal.stopFollow();
+          this.score?.increase();
+          this.app.stage.removeChild(animal.sprite);
+
+          this.group = this.group.filter(a => a !== animal);
+          this.animals = this.animals.filter(a => a !== animal);
+        }
         continue;
       }
 
@@ -123,12 +152,8 @@ export class Game {
       const dist = Math.hypot(dx, dy);
 
       if (dist < ANIMAL_FOLLOW_DISTANCE && this.group.length < MAX_GROUP_SIZE) {
-        const leader = this.group.length === 0
-          ? this.hero.sprite
-          : this.group[this.group.length - 1].sprite;
-
-        animal.follow(leader);
-
+        const followRadius = HERO_RADIUS + ANIMAL_RADIUS + 3
+        animal.follow(this.hero.sprite, this.group.length, followRadius, MAX_GROUP_SIZE);
         this.group.push(animal);
       }
     }
