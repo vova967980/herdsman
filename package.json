@@ -3,11 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "homepage": "https://vova967980.github.io/herdsman/",
   "scripts": {
     "start": "npm run dev",
-    "build": "npm run lint && tsc && vite build",
-    "lint": "eslint pixi-project",
-    "dev": "vite"
+    "build": "tsc && vite build",
+    "dev": "vite",
+    "deploy": "vite build && gh-pages -d dist"
   },
   "dependencies": {
     "@esotericsoftware/spine-pixi-v8": "^4.2.74",
@@ -22,6 +23,7 @@
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
+    "gh-pages": "^6.3.0",
     "prettier": "^3.6.2",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.25.0",

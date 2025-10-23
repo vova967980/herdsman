@@ -6,6 +6,7 @@ export default defineConfig({
     port: 8080,
     open: true,
   },
+  base: '/herdsman/',
   define: {
     APP_VERSION: JSON.stringify(process.env.npm_package_version),
   },
