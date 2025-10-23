@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import {
-  ANIMAL_COUNT, ANIMAL_FOLLOW_DISTANCE, ANIMAL_RADIUS,
+  ANIMAL_BASE_COUNT, ANIMAL_FOLLOW_DISTANCE, ANIMAL_RADIUS,
   GAME_BACKGROUND_COLOR,
   GAME_HEIGHT,
   GAME_WIDTH, HERO_RADIUS, HERO_SPEED, MAX_ANIMALS_ON_FIELD, MAX_GROUP_SIZE,
@@ -53,7 +53,7 @@ export class Game {
   private createAnimals() {
     if (!this.spawner || !this.yard) return;
 
-    for (let i = 0; i < ANIMAL_COUNT; i++) {
+    for (let i = 0; i < ANIMAL_BASE_COUNT; i++) {
       const animal = this.spawner.spawnEntity();
       this.animals.push(animal);
     }

@@ -4,3 +4,4 @@ export const GAME_BACKGROUND_COLOR = 0x2ecc71;
 
 export const MAX_GROUP_SIZE = 5;
 export const MAX_ANIMALS_ON_FIELD = 10;
+export const ANIMAL_BASE_COUNT = 5;

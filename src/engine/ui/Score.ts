@@ -6,7 +6,7 @@ const SCORE_FONT_SIZE = 24;
 const SCORE_PREFIX = 'Score: ';
 
 export class Score {
-  private text: PIXI.Text;
+  private readonly text: PIXI.Text;
   private value = 0;
 
   constructor() {
