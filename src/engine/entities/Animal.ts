@@ -48,7 +48,7 @@ export class Animal {
   }
 
   private chooseNewPatrolTarget() {
-    const { x, y } = receiveValidCoordinates(this.restrictedRect, this.restrictedRectBuffer);
+    const { x, y } = receiveValidCoordinates(this.restrictedRect, this.restrictedRectBuffer, this.sprite);
     this.patrolTarget = { x, y };
   }
 
